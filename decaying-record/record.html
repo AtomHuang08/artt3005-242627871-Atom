@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Card</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            width: 460px;
+            height: 520px;
+            perspective: 1200px;
+        }
+
+        .inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .card.flipped .inner {
+            transform: rotateY(180deg);
+        }
+
+        .front,
+        .back {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            padding: 28px;
+            background-color: #f7f4ec;
+            font-family: "Courier New", Courier, monospace;
+            color: #2a2a2a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .specimen {
+            flex: 1;
+            border: 1px solid #2a2a2a;
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            filter: none;
+            opacity: 1;
+        }
+
+        .catalog-number,
+        .field-label {
+            filter: none;
+            opacity: 1;
+            transition: none;
+        }
+
+        .catalog-number {
+            margin: 0 0 28px 0;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .field {
+            margin: 0 0 22px 0;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: #5a5a5a;
+        }
+
+        .field-value {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.45;
+            filter: blur(0);
+            opacity: 1;
+            letter-spacing: 0;
+            overflow: hidden;
+            isolation: isolate;
+            transition: filter 15s ease, opacity 15s ease, letter-spacing 15s ease;
+        }
+
+        .card.flipped .field-value {
+            filter: blur(8px);
+            opacity: 0;
+            letter-spacing: 0.55em;
+        }
+
+        .front {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .record-image {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            border-radius: 12px;
+            background-color: #e1e4e8;
+            display: block;
+        }
+
+        .text-content {
+            text-align: center;
+            margin-top: 24px;
+            width: 100%;
+        }
+
+        .title {
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            font-weight: 600;
+            color: #1c1e21;
+        }
+
+        .subtitle {
+            margin: 0;
+            font-size: 15px;
+            color: #65676b;
+            line-height: 1.4;
+        }
+
+        .archive-btn {
+            margin-top: auto;
+            width: 100%;
+            padding: 16px;
+            background-color: #0064e0;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .archive-btn:hover {
+            background-color: #0055bf;
+        }
+
+        .load-error {
+            font-family: "Courier New", Courier, monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #2a2a2a;
+            max-width: 28em;
+            text-align: center;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="inner">
+            <div class="front">
+                <img class="record-image" id="front-image" alt="">
+
+                <div class="text-content">
+                    <h2 class="title" id="front-title">Record Title</h2>
+                    <p class="subtitle" id="front-place">Place</p>
+                </div>
+
+                <button class="archive-btn">Archive this</button>
+            </div>
+            <div class="back">
+                <div class="specimen">
+                    <p class="catalog-number" id="catalog-id">REC-000</p>
+                    <div class="field">
+                        <span class="field-label">Title</span>
+                        <p class="field-value" id="field-title">Untitled specimen</p>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">Date and place</span>
+                        <p class="field-value" id="field-date-place">0000-00-00 · unknown location</p>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">Recorded by</span>
+                        <p class="field-value" id="field-recorder">Recorder name</p>
+                    </div>
+                    <div class="field">
+                        <span class="field-label">What was not captured</span>
+                        <p class="field-value not-captured" id="field-not-captured">Something this record fails to hold</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const card = document.querySelector('.card');
+        const button = document.querySelector('.archive-btn');
+
+        button.addEventListener('click', function () {
+            card.classList.add('flipped');
+        });
+
+        fetch('record.json')
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('record.json did not load');
+                }
+                return response.json();
+            })
+            .then(function (record) {
+                document.getElementById('catalog-id').textContent = record.catalog_id;
+                document.getElementById('field-title').textContent = record.title;
+                document.getElementById('field-date-place').textContent = record.date + ' · ' + record.place;
+                document.getElementById('field-recorder').textContent = record.recorder;
+                document.getElementById('field-not-captured').textContent = record.not_captured;
+                document.getElementById('front-image').src = record.image;
+                document.getElementById('front-image').alt = record.title;
+                document.getElementById('front-title').textContent = record.title;
+                document.getElementById('front-place').textContent = record.place;
+            })
+            .catch(function () {
+                document.body.innerHTML = '<p class="load-error">record.json did not load. Are you serving the folder? Open http://localhost:8000</p>';
+            });
+    </script>
+
+</body>
+</html>
